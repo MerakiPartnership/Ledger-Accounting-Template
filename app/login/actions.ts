@@ -43,6 +43,7 @@ export async function signIn(
     email,
     password: allowed ? password : randomUUID(),
   });
+  if (error) console.error("[auth-diag]", error.message, error.code, error.status);
   if (!allowed || error) return { error: GENERIC };
 
   redirect(next);

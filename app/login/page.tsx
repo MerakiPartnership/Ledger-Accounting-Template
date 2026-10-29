@@ -27,10 +27,10 @@ export default async function LoginPage({
     <main className="flex flex-1 items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <h1 className="font-serif text-2xl font-medium tracking-tight">
-            Ledger Accounting Template
+          <h1 className="text-2xl font-medium tracking-tight">
+            meraki<span className="font-light text-primary">ledger</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Sign in to continue.
           </p>
         </div>

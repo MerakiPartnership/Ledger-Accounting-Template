@@ -19,8 +19,8 @@ export async function AuthHeader() {
       : user.email;
   return (
     <div className="flex items-center justify-between border-b border-hair px-6 py-2">
-      <Link href="/" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
-        Ledger Accounting Template
+      <Link href="/" className="text-sm font-medium tracking-tight text-foreground hover:text-primary transition-colors">
+        meraki<span className="font-light text-primary">ledger</span>
       </Link>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         {admin && <SettingsDropdown canAddEntity={isEntityCreator(user.email)} />}

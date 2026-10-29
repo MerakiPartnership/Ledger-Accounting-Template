@@ -33,7 +33,7 @@ export function Greeting({ name }: { name: string }) {
 
   return (
     <div className="text-center">
-      <h1 className="font-serif text-4xl font-medium tracking-tight sm:text-5xl sm:whitespace-nowrap">
+      <h1 className="text-4xl font-light tracking-tight sm:text-5xl sm:whitespace-nowrap" style={{ letterSpacing: "-0.03em" }}>
         {g.heading(name)}
       </h1>
       <p className="mt-3 text-muted-foreground">

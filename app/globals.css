@@ -6,26 +6,24 @@
 
 @theme inline {
   /* THE page width (`max-w-page`) — every content page shares it so tab
-   * changes never shift the column. Sized so the widest ledger nav (an entity
-   * with the By Address tab — measured 1054px rendered) ends flush with the
-   * page edge; form/auth pages keep their own narrower columns. Adding a tab
-   * (or widening a label) means remeasuring this. */
+   * changes never shift the column. */
   --container-page: 66rem;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-source-serif);
-  --font-heading: var(--font-source-serif);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-mono);
+  /* Meraki uses one family for everything; map heading/serif to the same. */
+  --font-serif: var(--font-jakarta);
+  --font-heading: var(--font-jakarta);
 
-  /* Ledger design system — the "private-bank statement" palette. */
+  /* Meraki design system — cinematic dark-ink + blue-cyan accent. */
   --color-paper: var(--paper);
   --color-ink: var(--ink);
   --color-faint: var(--faint);
   --color-hair: var(--hair);
-  --color-evergreen: var(--evergreen);
-  --color-evergreen-soft: var(--evergreen-soft);
+  --color-evergreen: var(--accent-blue);
+  --color-evergreen-soft: var(--accent-blue-soft);
   --color-oxblood: var(--oxblood);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -66,94 +64,105 @@
 }
 
 :root {
-  /* Raw design-system values (the statement palette). */
-  --paper: #faf8f4;          /* warm off-white — the page */
-  --ink: #1c1b19;            /* warm near-black — primary text */
-  --faint: #9a988f;          /* demoted figures, captions */
-  --hair: #e7e3db;           /* hairline rules */
-  --evergreen: #1f4d3a;      /* the one accent: positive, active, brand */
-  --evergreen-soft: color-mix(in oklab, #1f4d3a 8%, transparent);
-  --oxblood: #8a3324;        /* negatives, with parentheses */
+  /* ── Meraki Partnership palette ────────────────────────────────────
+   * Cinematic near-black hero + white body + blue-into-cyan accent,
+   * inspired by themerakipartnership.com (Plus Jakarta Sans, v3). */
 
-  /* shadcn tokens, retuned warm. */
+  /* Surfaces */
+  --paper: #FFFFFF;
+  --ink: #05070D;
+  --faint: #586070;
+  --hair: #E4E7EC;
+  --band: #F5F6F8;
+
+  /* Accent: Meraki blue → cyan gradient */
+  --accent-blue: #1150CC;
+  --accent-blue-lt: #5B93FF;
+  --accent-blue-soft: color-mix(in oklab, #1150CC 8%, transparent);
+  --accent-cyan: #36C2F0;
+  --accent-grad: linear-gradient(90deg, #1150CC 0%, #5B93FF 55%, #36C2F0 100%);
+  --oxblood: #C0392B;
+
+  /* shadcn tokens — retuned to Meraki blue-ink. */
   --background: var(--paper);
-  --foreground: var(--ink);
-  --card: #ffffff;
-  --card-foreground: var(--ink);
-  --popover: #ffffff;
-  --popover-foreground: var(--ink);
-  --primary: var(--evergreen);
-  --primary-foreground: #faf8f4;
-  --secondary: #f1eee7;
-  --secondary-foreground: var(--ink);
-  --muted: #f1eee7;
-  --muted-foreground: #6b6a65;
-  --accent: #f1eee7;
-  --accent-foreground: var(--ink);
-  --destructive: var(--oxblood);
-  --border: var(--hair);
-  --input: var(--hair);
-  --ring: var(--evergreen);
-  --chart-1: var(--evergreen);
-  --chart-2: #6b6a65;
-  --chart-3: #b08968;
-  --chart-4: var(--oxblood);
-  --chart-5: #c9c3b6;
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --foreground: #0B0D12;
+  --card: #FFFFFF;
+  --card-foreground: #0B0D12;
+  --popover: #FFFFFF;
+  --popover-foreground: #0B0D12;
+  --primary: #1150CC;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F6F8;
+  --secondary-foreground: #0B0D12;
+  --muted: #F5F6F8;
+  --muted-foreground: #586070;
+  --accent: #F5F6F8;
+  --accent-foreground: #0B0D12;
+  --destructive: #C0392B;
+  --border: #E4E7EC;
+  --input: #E4E7EC;
+  --ring: #1150CC;
+  --chart-1: #1150CC;
+  --chart-2: #5B93FF;
+  --chart-3: #36C2F0;
+  --chart-4: #586070;
+  --chart-5: #E4E7EC;
+  --radius: 0.875rem;
+  --sidebar: #FAFBFC;
+  --sidebar-foreground: #0B0D12;
+  --sidebar-primary: #1150CC;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5F6F8;
+  --sidebar-accent-foreground: #0B0D12;
+  --sidebar-border: #E4E7EC;
+  --sidebar-ring: #1150CC;
 }
 
 .dark {
-  /* The statement palette at night — same warm hues, values inverted. Paper
-   * becomes a warm charcoal (never blue-black), ink becomes warm off-white,
-   * and the two accents brighten just enough to hold ~4:1 contrast both as
-   * text on the page and as button fills under white labels. */
-  --paper: #161411;          /* warm near-black — the page */
-  --ink: #ece9e2;            /* warm off-white — primary text */
-  --faint: #918d82;          /* demoted figures, captions */
-  --hair: #2d2a23;           /* hairline rules */
-  --evergreen: #3f8a67;      /* brightened for dark ground */
-  --evergreen-soft: color-mix(in oklab, #3f8a67 14%, transparent);
-  --oxblood: #c0604b;        /* brightened terracotta-oxblood */
+  /* ── Meraki at night ───────────────────────────────────────────── */
+  --paper: #05070D;
+  --ink: #FFFFFF;
+  --faint: #A9B1C2;
+  --hair: #1C2231;
+  --band: #0D111B;
 
-  --background: var(--paper);
-  --foreground: var(--ink);
-  --card: #1d1a16;
-  --card-foreground: var(--ink);
-  --popover: #211e19;
-  --popover-foreground: var(--ink);
-  --primary: var(--evergreen);
-  --primary-foreground: #faf8f4;
-  --secondary: #2b2720;
-  --secondary-foreground: var(--ink);
-  --muted: #2b2720;
-  --muted-foreground: #a5a196;
-  --accent: #2b2720;
-  --accent-foreground: var(--ink);
-  --destructive: var(--oxblood);
-  --border: var(--hair);
-  --input: #37332a;
-  --ring: var(--evergreen);
-  --chart-1: var(--evergreen);
-  --chart-2: #a5a196;
-  --chart-3: #c39a72;
-  --chart-4: var(--oxblood);
-  --chart-5: #4a453c;
-  --sidebar: #1d1a16;
-  --sidebar-foreground: var(--ink);
-  --sidebar-primary: var(--evergreen);
-  --sidebar-primary-foreground: #faf8f4;
-  --sidebar-accent: #2b2720;
-  --sidebar-accent-foreground: var(--ink);
-  --sidebar-border: var(--hair);
-  --sidebar-ring: var(--evergreen);
+  --accent-blue: #5B93FF;
+  --accent-blue-lt: #5B93FF;
+  --accent-blue-soft: color-mix(in oklab, #5B93FF 14%, transparent);
+  --accent-cyan: #36C2F0;
+  --oxblood: #E74C3C;
+
+  --background: #05070D;
+  --foreground: #FFFFFF;
+  --card: #0D111B;
+  --card-foreground: #FFFFFF;
+  --popover: #0D111B;
+  --popover-foreground: #FFFFFF;
+  --primary: #5B93FF;
+  --primary-foreground: #05070D;
+  --secondary: #1C2231;
+  --secondary-foreground: #FFFFFF;
+  --muted: #1C2231;
+  --muted-foreground: #A9B1C2;
+  --accent: #1C2231;
+  --accent-foreground: #FFFFFF;
+  --destructive: #E74C3C;
+  --border: #1C2231;
+  --input: #1C2231;
+  --ring: #5B93FF;
+  --chart-1: #5B93FF;
+  --chart-2: #36C2F0;
+  --chart-3: #1150CC;
+  --chart-4: #A9B1C2;
+  --chart-5: #1C2231;
+  --sidebar: #0D111B;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #5B93FF;
+  --sidebar-primary-foreground: #05070D;
+  --sidebar-accent: #1C2231;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #1C2231;
+  --sidebar-ring: #5B93FF;
 }
 
 @layer base {
@@ -168,10 +177,7 @@
   }
 }
 
-/* Evergreen range slider for the investment-returns assumptions. Kept OUTSIDE
-   @layer so these author styles win over the native control (a layered rule
-   loses the cascade here and the slider falls back to the UA blue). The filled
-   portion is set inline via a background gradient on the element. */
+/* Accent range slider — Meraki blue. */
 input[type="range"].rng {
   -webkit-appearance: none;
   appearance: none;
@@ -179,7 +185,7 @@ input[type="range"].rng {
   border-radius: 3px;
   cursor: pointer;
   background: var(--hair);
-  accent-color: var(--evergreen);
+  accent-color: var(--accent-blue);
 }
 input[type="range"].rng::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -187,15 +193,15 @@ input[type="range"].rng::-webkit-slider-thumb {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: var(--evergreen);
-  border: 2px solid var(--card); /* #fff in light; themed ring in dark */
+  background: var(--accent-blue);
+  border: 2px solid var(--card);
   box-shadow: 0 1px 3px #00000026;
 }
 input[type="range"].rng::-moz-range-thumb {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: var(--evergreen);
+  background: var(--accent-blue);
   border: 2px solid var(--card);
   box-shadow: 0 1px 3px #00000026;
 }

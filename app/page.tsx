@@ -91,7 +91,7 @@ export default async function Home() {
               key={e.id}
               href={`/ledger/${e.id}`}
               prefetch={false}
-              className="group flex w-full items-center justify-between gap-3 rounded-lg border border-hair bg-card px-4 py-3 shadow-[0_1px_2px_rgb(28_27_25/0.04)] transition-all duration-150 hover:border-evergreen/40 hover:shadow-[0_3px_12px_-2px_rgb(28_27_25/0.10)]"
+              className="group flex w-full items-center justify-between gap-3 rounded-lg border border-hair bg-card px-4 py-3 shadow-[0_1px_2px_rgb(5_7_13/0.04)] transition-all duration-150 hover:border-evergreen/40 hover:shadow-[0_3px_12px_-2px_rgb(5_7_13/0.10)]"
             >
               <span className="text-sm font-medium group-hover:text-evergreen transition-colors">
                 {e.nickname ?? e.name}

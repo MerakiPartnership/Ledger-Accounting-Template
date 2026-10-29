@@ -45,7 +45,10 @@ export async function signIn(
     email,
     password: allowed ? password : randomUUID(),
   });
-  if (error) console.error("[login-debug] signIn error:", error.message, "code:", error.code);
+  // TEMPORARY: return diagnostic info to identify failure point
+  if (!allowed && !error) return { error: `[DEBUG] allowed=false, env_set=${!!process.env.AUTH_ADMIN_EMAILS}, env_len=${(process.env.AUTH_ADMIN_EMAILS ?? "").length}, db_url_set=${!!process.env.SUPABASE_DB_URL}, db_url_len=${(process.env.SUPABASE_DB_URL ?? "").length}` };
+  if (allowed && error) return { error: `[DEBUG] allowed=true but auth error: ${error.message} (${error.code})` };
+  if (!allowed && error) return { error: `[DEBUG] both failed: allowed=false, auth=${error.message}, env=${!!process.env.AUTH_ADMIN_EMAILS}` };
   if (!allowed || error) return { error: GENERIC };
 
   redirect(next);

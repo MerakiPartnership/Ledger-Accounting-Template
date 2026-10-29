@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { fetch as undiciFetch } from "undici";
 
 /**
  * Cookie-bound Supabase client for server components, server actions, and route
@@ -31,28 +32,13 @@ export async function getAuthClient() {
         },
       },
       global: {
-        fetch: (...args: Parameters<typeof fetch>) => {
-          // Vercel edge injects non-Latin1 request headers (e.g.
-          // x-vercel-ip-city). Next.js's patched fetch may forward them,
-          // triggering a ByteString crash in the Headers constructor. Use
-          // the native fetch with sanitized headers to avoid this.
-          const [input, init] = args;
-          if (init?.headers) {
-            const safe = new Headers();
-            const src =
-              init.headers instanceof Headers
-                ? init.headers
-                : new Headers(init.headers as HeadersInit);
-            for (const [k, v] of src) {
-              try {
-                safe.set(k, v);
-              } catch {
-                safe.set(k, v.replace(/[^\x00-\xFF]/g, ""));
-              }
-            }
-            return fetch(input, { ...init, headers: safe });
-          }
-          return fetch(input, init);
+        fetch: (input, init) => {
+          // Next.js's patched global fetch merges request-context headers
+          // (including Vercel-injected non-Latin1 ones like x-vercel-ip-city)
+          // into outgoing requests, crashing with "Cannot convert argument to
+          // a ByteString". Bypass the patched fetch entirely by using undici's
+          // native fetch which has no async-context header forwarding.
+          return undiciFetch(input as Parameters<typeof undiciFetch>[0], init as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>;
         },
       },
     }

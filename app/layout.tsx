@@ -18,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Meraki Ledger",
-  description: "Multi-entity bookkeeping and ledger — The Meraki Partnership",
+  description: "Multi-entity bookkeeping and ledger - The Meraki Partnership",
   applicationName: "Meraki Ledger",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
 };

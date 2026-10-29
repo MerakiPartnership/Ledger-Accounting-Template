@@ -30,11 +30,9 @@ export async function signIn(
   let allowed: boolean;
   try {
     allowed = await isEmailAllowed(email);
-  } catch (e) {
-    console.error("[login] isEmailAllowed threw:", e instanceof Error ? e.message : e);
+  } catch {
     allowed = false;
   }
-  console.log("[login] allowed=%s email=%s", allowed, email);
 
   // Always perform the auth round-trip so response TIMING can't reveal whether an
   // email is provisioned (a not-allowed email would otherwise return before the
@@ -45,9 +43,6 @@ export async function signIn(
     email,
     password: allowed ? password : randomUUID(),
   });
-  if (error) {
-    console.error("[login] signInWithPassword error:", error.message, error.status);
-  }
   if (!allowed || error) return { error: GENERIC };
 
   redirect(next);

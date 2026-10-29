@@ -2,6 +2,29 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SECURITY_HEADERS } from "@/lib/security/headers";
 
+/**
+ * The edge runtime requires all header values to be Latin-1 (ByteString).
+ * Upstream proxies (Vercel edge, CDN) may inject headers with non-Latin1 values
+ * (e.g. x-vercel-ip-city for non-ASCII city names). NextResponse.next({ request })
+ * copies every request header into x-middleware-request-* response headers, so a
+ * single non-Latin1 request header crashes the entire middleware. Strip them.
+ */
+function latin1Safe(headers: Headers): Headers {
+  const safe = new Headers();
+  for (const [k, v] of headers) {
+    // Fast path: most values are pure ASCII.
+    let clean = v;
+    for (let i = 0; i < v.length; i++) {
+      if (v.charCodeAt(i) > 255) {
+        clean = v.replace(/[^\x00-\xFF]/g, "");
+        break;
+      }
+    }
+    safe.set(k, clean);
+  }
+  return safe;
+}
+
 function withSecurityHeaders(response: NextResponse) {
   for (const [key, value] of SECURITY_HEADERS) {
     response.headers.set(key, value);
@@ -160,7 +183,8 @@ function authUnavailable() {
 }
 
 async function getSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const safeReq = { request: { headers: latin1Safe(request.headers) } };
+  let response = NextResponse.next(safeReq);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -174,7 +198,9 @@ async function getSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          response = NextResponse.next({ request });
+          response = NextResponse.next({
+            request: { headers: latin1Safe(request.headers) },
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );

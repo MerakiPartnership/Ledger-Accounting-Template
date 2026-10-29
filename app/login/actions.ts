@@ -43,7 +43,8 @@ export async function signIn(
     email,
     password: allowed ? password : randomUUID(),
   });
-  if (!allowed || error) return { error: GENERIC };
+  if (error) return { error: `[DIAG] ${error.message} (${error.code}/${error.status})` };
+  if (!allowed) return { error: GENERIC };
 
   redirect(next);
 }

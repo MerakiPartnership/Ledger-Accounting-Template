@@ -30,9 +30,7 @@ export async function signIn(
   let allowed: boolean;
   try {
     allowed = await isEmailAllowed(email);
-    console.log("[login-debug] isEmailAllowed:", allowed, "env:", !!process.env.AUTH_ADMIN_EMAILS, "len:", (process.env.AUTH_ADMIN_EMAILS ?? "").length);
-  } catch (err) {
-    console.error("[login-debug] isEmailAllowed threw:", err);
+  } catch {
     allowed = false;
   }
 
@@ -45,10 +43,6 @@ export async function signIn(
     email,
     password: allowed ? password : randomUUID(),
   });
-  // TEMPORARY: return diagnostic info to identify failure point
-  if (!allowed && !error) return { error: `[DEBUG] allowed=false, env_set=${!!process.env.AUTH_ADMIN_EMAILS}, env_len=${(process.env.AUTH_ADMIN_EMAILS ?? "").length}, db_url_set=${!!process.env.SUPABASE_DB_URL}, db_url_len=${(process.env.SUPABASE_DB_URL ?? "").length}` };
-  if (allowed && error) return { error: `[DEBUG] allowed=true but auth error: ${error.message} (${error.code})` };
-  if (!allowed && error) return { error: `[DEBUG] both failed: allowed=false, auth=${error.message}, env=${!!process.env.AUTH_ADMIN_EMAILS}` };
   if (!allowed || error) return { error: GENERIC };
 
   redirect(next);

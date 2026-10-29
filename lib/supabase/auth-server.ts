@@ -30,6 +30,31 @@ export async function getAuthClient() {
           }
         },
       },
+      global: {
+        fetch: (...args: Parameters<typeof fetch>) => {
+          // Vercel edge injects non-Latin1 request headers (e.g.
+          // x-vercel-ip-city). Next.js's patched fetch may forward them,
+          // triggering a ByteString crash in the Headers constructor. Use
+          // the native fetch with sanitized headers to avoid this.
+          const [input, init] = args;
+          if (init?.headers) {
+            const safe = new Headers();
+            const src =
+              init.headers instanceof Headers
+                ? init.headers
+                : new Headers(init.headers as HeadersInit);
+            for (const [k, v] of src) {
+              try {
+                safe.set(k, v);
+              } catch {
+                safe.set(k, v.replace(/[^\x00-\xFF]/g, ""));
+              }
+            }
+            return fetch(input, { ...init, headers: safe });
+          }
+          return fetch(input, init);
+        },
+      },
     }
   );
 }

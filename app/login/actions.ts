@@ -30,7 +30,9 @@ export async function signIn(
   let allowed: boolean;
   try {
     allowed = await isEmailAllowed(email);
-  } catch {
+    console.log("[login-debug] isEmailAllowed:", allowed, "env:", !!process.env.AUTH_ADMIN_EMAILS, "len:", (process.env.AUTH_ADMIN_EMAILS ?? "").length);
+  } catch (err) {
+    console.error("[login-debug] isEmailAllowed threw:", err);
     allowed = false;
   }
 
@@ -43,6 +45,7 @@ export async function signIn(
     email,
     password: allowed ? password : randomUUID(),
   });
+  if (error) console.error("[login-debug] signIn error:", error.message, "code:", error.code);
   if (!allowed || error) return { error: GENERIC };
 
   redirect(next);

@@ -19,7 +19,11 @@ export async function getAuthClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          try {
+            return cookieStore.getAll();
+          } catch {
+            return [];
+          }
         },
         setAll(cookiesToSet) {
           try {
@@ -27,7 +31,7 @@ export async function getAuthClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // called from a Server Component — middleware refreshes the session
+            // Server Component or ByteString — middleware refreshes the session
           }
         },
       },
@@ -47,11 +51,15 @@ export async function getAuthClient() {
 
 /** The current signed-in user (validated against the Auth server), or null. */
 export async function getCurrentUser() {
-  const supabase = await getAuthClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  try {
+    const supabase = await getAuthClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 /**

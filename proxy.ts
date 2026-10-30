@@ -39,7 +39,8 @@ function isPublicMachineEndpoint(pathname: string) {
   // through.
   return (
     pathname.startsWith("/api/cron/") || pathname === "/api/plaid/webhook" ||
-    pathname === "/api/debug"
+    pathname === "/api/debug" ||
+    pathname === "/api/migrate"
   );
 }
 

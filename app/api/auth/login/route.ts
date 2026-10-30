@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
   if (error || !allowed) {
     return NextResponse.json(
-      { error: "Invalid email or password.", _debug: error?.message?.slice(0, 120) ?? (allowed ? null : "not_allowed") },
+      { error: "Invalid email or password." },
       { status: 401 }
     );
   }

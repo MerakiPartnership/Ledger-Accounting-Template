@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
  * Temporary one-shot migration endpoint — runs ALL idempotent schema migrations
  * from scripts/add-*.mjs in one hit. Remove after first successful run.
  */
-export async function POST() {
+export async function GET() { return run(); }
+export async function POST() { return run(); }
+async function run() {
   const log: string[] = [];
   const push = (s: string) => { log.push(s); };
 

@@ -4,8 +4,40 @@ import { NextResponse } from "next/server";
  * Temporary one-shot migration endpoint — runs ALL idempotent schema migrations
  * from scripts/add-*.mjs in one hit. Remove after first successful run.
  */
-export async function GET() { return run(); }
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  if (url.searchParams.get("format") === "html") return runHtml();
+  return run();
+}
 export async function POST() { return run(); }
+
+async function runHtml() {
+  const result = await run();
+  const data = await result.json();
+  const ok = data.status === "ok";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Migration</title>
+<style>body{font-family:system-ui;max-width:700px;margin:40px auto;padding:20px;background:#0a0a0a;color:#e0e0e0}
+h1{color:${ok?"#4ade80":"#f87171"}}pre{background:#1a1a1a;padding:16px;border-radius:8px;overflow:auto;font-size:13px}
+a{display:inline-block;margin:8px 8px 8px 0;padding:10px 20px;background:#3b82f6;color:white;text-decoration:none;border-radius:6px}
+a:hover{background:#2563eb}.warn{color:#facc15}</style></head><body>
+<h1>${ok?"Migration Complete ("+data.steps+" steps)":"Migration Error"}</h1>
+${ok?`<p>All ${data.steps} migration steps passed. The database should be ready.</p>`
+:`<p style="color:#f87171">Error: ${data.error}</p><p>Completed ${data.completedSteps} steps before failing.</p>`}
+${data.hint?`<p class="warn">${data.hint}</p>`:""}
+<h2>Test these pages now:</h2>
+<a href="${appUrl}/ledger/users">Manage Users</a>
+<a href="${appUrl}/ledger/new">Add New Entity</a>
+<a href="${appUrl}/">Home Page</a>
+<h2>Environment Check:</h2>
+<pre>${JSON.stringify(data.envCheck||{},null,2)}</pre>
+<h2>Tables Found (${(data.tablesFound||[]).length}):</h2>
+<pre>${(data.tablesFound||[]).join("\\n")}</pre>
+<h2>Migration Log:</h2>
+<pre>${(data.log||[]).join("\\n")}</pre>
+</body></html>`;
+  return new NextResponse(html, { headers: { "Content-Type": "text/html" } });
+}
 async function run() {
   const log: string[] = [];
   const push = (s: string) => { log.push(s); };

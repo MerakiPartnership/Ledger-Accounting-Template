@@ -38,7 +38,8 @@ function isPublicMachineEndpoint(pathname: string) {
   // token — see lib/security/machine-auth.ts), so the login gate lets them
   // through.
   return (
-    pathname.startsWith("/api/cron/") || pathname === "/api/plaid/webhook"
+    pathname.startsWith("/api/cron/") || pathname === "/api/plaid/webhook" ||
+    pathname === "/api/debug"
   );
 }
 

@@ -1,12 +1,38 @@
 import { NextResponse } from "next/server";
 
+function errDetail(e: unknown): string {
+  if (!(e instanceof Error)) return String(e);
+  const pg = e as Error & { code?: string; detail?: string; severity?: string; cause?: unknown };
+  const parts = [pg.message];
+  if (pg.code) parts.push(`code=${pg.code}`);
+  if (pg.severity) parts.push(`severity=${pg.severity}`);
+  if (pg.detail) parts.push(`detail=${pg.detail}`);
+  if (pg.cause) parts.push(`cause=${String(pg.cause)}`);
+  return parts.join(' | ');
+}
+
 export async function GET() {
   const results: Record<string, string> = {};
+
+  // 0. Env var check
+  results.SUPABASE_DB_URL = process.env.SUPABASE_DB_URL ? `set (${process.env.SUPABASE_DB_URL.length} chars)` : "MISSING";
+  results.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ? `set (${process.env.NEXT_PUBLIC_SUPABASE_URL.length} chars)` : "MISSING";
+  results.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? `set (${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length} chars)` : "MISSING";
+  results.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ? `set (${process.env.SUPABASE_SERVICE_ROLE_KEY.length} chars)` : "MISSING";
 
   // 1. Test DB connection
   try {
     const { db, schema } = await import("@/lib/db/client");
     results.db_connect = "ok";
+
+    // 1b. Test raw query
+    try {
+      const { sql } = await import("drizzle-orm");
+      const rows = await db.execute(sql`SELECT 1 as test`);
+      results.raw_query = `ok`;
+    } catch (e: unknown) {
+      results.raw_query = `ERROR: ${errDetail(e)}`;
+    }
 
     // 2. Test bk_app_users
     try {
@@ -17,7 +43,7 @@ export async function GET() {
         .limit(1);
       results.bk_app_users = `ok (${rows.length} rows)`;
     } catch (e: unknown) {
-      results.bk_app_users = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
+      results.bk_app_users = `ERROR: ${errDetail(e)}`;
     }
 
     // 3. Test bk_ledger_entities
@@ -28,7 +54,7 @@ export async function GET() {
         .limit(1);
       results.bk_ledger_entities = `ok (${rows.length} rows)`;
     } catch (e: unknown) {
-      results.bk_ledger_entities = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
+      results.bk_ledger_entities = `ERROR: ${errDetail(e)}`;
     }
 
     // 4. Test bk_plaid_transactions
@@ -39,7 +65,7 @@ export async function GET() {
         .limit(1);
       results.bk_plaid_transactions = `ok (${rows.length} rows)`;
     } catch (e: unknown) {
-      results.bk_plaid_transactions = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
+      results.bk_plaid_transactions = `ERROR: ${errDetail(e)}`;
     }
 
     // 5. Test bk_audit_log
@@ -50,57 +76,10 @@ export async function GET() {
         .limit(1);
       results.bk_audit_log = `ok (${rows.length} rows)`;
     } catch (e: unknown) {
-      results.bk_audit_log = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-    }
-
-    // 6. Test getCurrentUser
-    try {
-      const { getCurrentUser } = await import("@/lib/supabase/auth-server");
-      const user = await getCurrentUser();
-      results.getCurrentUser = user ? `ok (${user.email})` : "null (not authenticated)";
-    } catch (e: unknown) {
-      results.getCurrentUser = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-    }
-
-    // 7. Test full home page flow
-    try {
-      const { getCurrentUser } = await import("@/lib/supabase/auth-server");
-      const { accessibleEntityIds, isAdmin } = await import("@/lib/ledger/access");
-      const user = await getCurrentUser();
-      if (user) {
-        const admin = await isAdmin(user.email);
-        results.isAdmin = `ok (${admin})`;
-        const ids = await accessibleEntityIds(user.email);
-        results.accessibleEntityIds = `ok (${ids === "all" ? "all" : ids.size})`;
-      } else {
-        results.home_flow = "skipped (no user)";
-      }
-    } catch (e: unknown) {
-      results.home_flow = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-    }
-
-    // 8. Test pendingCountsByEntity
-    try {
-      const { pendingCountsByEntity } = await import("@/lib/plaid/review-data");
-      const counts = await pendingCountsByEntity("all", {
-        settledOnly: true,
-        excludeQueueHidden: true,
-      });
-      results.pendingCountsByEntity = `ok (${counts.size} entities)`;
-    } catch (e: unknown) {
-      results.pendingCountsByEntity = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
-    }
-
-    // 9. Test unreviewedCount
-    try {
-      const { unreviewedCount } = await import("@/lib/ledger/audit-review");
-      const n = await unreviewedCount();
-      results.unreviewedCount = `ok (${n})`;
-    } catch (e: unknown) {
-      results.unreviewedCount = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
+      results.bk_audit_log = `ERROR: ${errDetail(e)}`;
     }
   } catch (e: unknown) {
-    results.db_connect = `ERROR: ${e instanceof Error ? e.message : String(e)}`;
+    results.db_connect = `ERROR: ${errDetail(e)}`;
   }
 
   return NextResponse.json(results, {

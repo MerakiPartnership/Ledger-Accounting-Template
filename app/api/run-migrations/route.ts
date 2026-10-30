@@ -541,6 +541,18 @@ async function run() {
       ADD COLUMN IF NOT EXISTS activity text NOT NULL DEFAULT 'Real Estate'`);
     push("22. bk_accounts.activity added");
 
+    // ── 23. bk_loans: missing columns from drizzle migration 0009 + schema ─
+    await db.execute(sql`ALTER TABLE bk_loans
+      ALTER COLUMN original_principal_cents DROP NOT NULL,
+      ALTER COLUMN annual_rate_bps         DROP NOT NULL,
+      ALTER COLUMN term_months             DROP NOT NULL,
+      ALTER COLUMN first_payment_date      DROP NOT NULL`);
+    await db.execute(sql`ALTER TABLE bk_loans
+      ADD COLUMN IF NOT EXISTS remaining_term_months integer,
+      ADD COLUMN IF NOT EXISTS rate_as_of_date       date,
+      ADD COLUMN IF NOT EXISTS interest_only boolean NOT NULL DEFAULT false`);
+    push("23. bk_loans columns added (remaining_term_months, rate_as_of_date, interest_only) + NOT NULL relaxed");
+
     // ── Diagnostics: check env vars needed for pages to work ──────────
     const diag: Record<string, string> = {};
     diag.OWNER_EMAIL = process.env.OWNER_EMAIL ? "SET" : "MISSING — /ledger/new (Add Entity) will 404 without this";

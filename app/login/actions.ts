@@ -19,34 +19,32 @@ export async function signIn(
 
   if (!email || !password) return { error: "Email and password are required." };
 
-  // Brute-force cap, keyed on the TRUSTED client IP (not the email — so varying
-  // the email can't bypass it). Generic response reveals nothing about the email.
-  const rl = await limitAction("login", loginIdentity(await headers()));
-  if (rl) return { error: rl.error };
-
-  // Uniform failure for BOTH not-allowed and bad-credential cases, so a response
-  // never reveals whether an email is registered / allowed / active.
-  const GENERIC = "Invalid email or password.";
-  let allowed: boolean;
+  // ── TEMPORARY: isolate which step throws ByteString ──
+  let step = "0:init";
   try {
-    allowed = await isEmailAllowed(email);
-  } catch {
-    allowed = false;
+    step = "1:headers";
+    const h = await headers();
+    step = "2:rateLimit";
+    const rl = await limitAction("login", loginIdentity(h));
+    if (rl) return { error: rl.error };
+    step = "3:isAllowed";
+    let allowed: boolean;
+    try { allowed = await isEmailAllowed(email); } catch { allowed = false; }
+    step = "4:getAuthClient";
+    const supabase = await getAuthClient();
+    step = "5:signIn";
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: allowed ? password : randomUUID(),
+    });
+    step = "6:done";
+    if (error) return { error: `[DIAG@${step}] ${error.message}` };
+    if (!allowed) return { error: "Invalid email or password." };
+    redirect(next);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { error: `[CRASH@${step}] ${msg.slice(0, 120)}` };
   }
-
-  // Always perform the auth round-trip so response TIMING can't reveal whether an
-  // email is provisioned (a not-allowed email would otherwise return before the
-  // network hop). For a disallowed email we sign in with a throwaway password so
-  // a valid credential can never establish a session — auth always fails there.
-  const supabase = await getAuthClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password: allowed ? password : randomUUID(),
-  });
-  if (error) return { error: `[DIAG] ${error.message} (${error.code}/${error.status})` };
-  if (!allowed) return { error: GENERIC };
-
-  redirect(next);
 }
 
 export async function signOut() {

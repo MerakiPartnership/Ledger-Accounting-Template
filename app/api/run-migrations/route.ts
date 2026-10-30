@@ -509,7 +509,33 @@ async function run() {
       ADD COLUMN IF NOT EXISTS activity text NOT NULL DEFAULT 'Real Estate'`);
     push("22. bk_accounts.activity added");
 
-    return NextResponse.json({ status: "ok", steps: log.length, log });
+    // ── Diagnostics: check env vars needed for pages to work ──────────
+    const diag: Record<string, string> = {};
+    diag.OWNER_EMAIL = process.env.OWNER_EMAIL ? "SET" : "MISSING — /ledger/new (Add Entity) will 404 without this";
+    diag.AUTH_ADMIN_EMAILS = process.env.AUTH_ADMIN_EMAILS ? "SET" : "MISSING — /ledger/users (Manage Users) requires admin";
+    diag.AUTH_ALLOWED_EMAILS = process.env.AUTH_ALLOWED_EMAILS ? "SET" : "MISSING";
+    diag.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ? "SET" : "MISSING";
+    diag.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "MISSING";
+
+    // Check if tables exist
+    const tableCheck = await db.execute(sql`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name LIKE 'bk_%'
+      ORDER BY table_name`);
+    const tables = (tableCheck as unknown as {table_name: string}[]).map(r => r.table_name);
+
+    return NextResponse.json({
+      status: "ok",
+      steps: log.length,
+      log,
+      envCheck: diag,
+      tablesFound: tables,
+      hint: !process.env.OWNER_EMAIL
+        ? "CRITICAL: Set OWNER_EMAIL=services@themerakipartnership.com in Vercel Environment Variables to fix 'Add Entity' page"
+        : !process.env.AUTH_ADMIN_EMAILS
+        ? "CRITICAL: Set AUTH_ADMIN_EMAILS=services@themerakipartnership.com in Vercel Environment Variables to fix 'Manage Users' page"
+        : "All env vars present — if pages still fail, check Vercel deployment logs"
+    });
   } catch (e: unknown) {
     return NextResponse.json({
       status: "error",

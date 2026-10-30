@@ -32,7 +32,13 @@ async function run() {
       ADD COLUMN IF NOT EXISTS property_address text,
       ADD COLUMN IF NOT EXISTS valuation_url text,
       ADD COLUMN IF NOT EXISTS parent_entity_id uuid,
-      ADD COLUMN IF NOT EXISTS ownership_pct numeric`);
+      ADD COLUMN IF NOT EXISTS ownership_pct numeric,
+      ADD COLUMN IF NOT EXISTS owners jsonb,
+      ADD COLUMN IF NOT EXISTS legal_name text,
+      ADD COLUMN IF NOT EXISTS tax_type text,
+      ADD COLUMN IF NOT EXISTS fiscal_year_start text DEFAULT 'January',
+      ADD COLUMN IF NOT EXISTS formation_date date,
+      ADD COLUMN IF NOT EXISTS imported_through date`);
     push("2. bk_ledger_entities columns added");
 
     // ── 3. bk_entity_access: access_level ────────────────────────────────────
@@ -435,6 +441,73 @@ async function run() {
     await db.execute(sql`ALTER TABLE bk_rate_limits ENABLE ROW LEVEL SECURITY`);
     await db.execute(sql`REVOKE ALL ON bk_rate_limits FROM anon, authenticated`);
     push("17. bk_rate_limits created + RLS");
+
+    // ── 18. bk_documents ─────────────────────────────────────────────────────
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS bk_documents (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      entity_id uuid NOT NULL REFERENCES bk_ledger_entities(id) ON DELETE CASCADE,
+      storage_path text NOT NULL,
+      file_name text NOT NULL,
+      content_type text,
+      size_bytes bigint,
+      doc_type text,
+      doc_year integer,
+      label text,
+      uploaded_by text,
+      created_at timestamptz DEFAULT now()
+    )`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS bk_documents_entity_idx
+      ON bk_documents (entity_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS bk_documents_entity_year_idx
+      ON bk_documents (entity_id, doc_year)`);
+    await db.execute(sql`ALTER TABLE bk_documents ENABLE ROW LEVEL SECURITY`);
+    await db.execute(sql`REVOKE ALL ON bk_documents FROM anon, authenticated`);
+    push("18. bk_documents created + RLS");
+
+    // ── 19. bk_journal_edits ─────────────────────────────────────────────────
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS bk_journal_edits (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      entity_id uuid NOT NULL REFERENCES bk_ledger_entities(id) ON DELETE CASCADE,
+      entry_id uuid NOT NULL REFERENCES bk_journal_entries(id) ON DELETE CASCADE,
+      line_id uuid REFERENCES bk_journal_lines(id) ON DELETE CASCADE,
+      field text NOT NULL,
+      old_value text,
+      new_value text,
+      edited_at timestamptz DEFAULT now(),
+      edited_by text
+    )`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS bk_journal_edits_entry_idx
+      ON bk_journal_edits (entry_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS bk_journal_edits_entity_idx
+      ON bk_journal_edits (entity_id)`);
+    await db.execute(sql`ALTER TABLE bk_journal_edits ENABLE ROW LEVEL SECURITY`);
+    await db.execute(sql`REVOKE ALL ON bk_journal_edits FROM anon, authenticated`);
+    push("19. bk_journal_edits created + RLS");
+
+    // ── 20. bk_journal_entries: edit provenance columns ──────────────────────
+    await db.execute(sql`ALTER TABLE bk_journal_entries
+      ADD COLUMN IF NOT EXISTS edited_at timestamptz,
+      ADD COLUMN IF NOT EXISTS edited_by text`);
+    push("20. bk_journal_entries edit columns added");
+
+    // ── 21. bk_journal_lines: location column ────────────────────────────────
+    await db.execute(sql`ALTER TABLE bk_journal_lines
+      ADD COLUMN IF NOT EXISTS location text`);
+    push("21. bk_journal_lines.location added");
+
+    // ── 21b. bk_plaid_transactions: suggestion columns ─────────────────────
+    await db.execute(sql`ALTER TABLE bk_plaid_transactions
+      ADD COLUMN IF NOT EXISTS suggested_account_id uuid,
+      ADD COLUMN IF NOT EXISTS suggested_confidence numeric,
+      ADD COLUMN IF NOT EXISTS suggested_reasoning text,
+      ADD COLUMN IF NOT EXISTS suggestion_source text,
+      ADD COLUMN IF NOT EXISTS suggested_at timestamptz`);
+    push("21b. bk_plaid_transactions suggestion columns added");
+
+    // ── 22. bk_accounts: activity column ────────────────────────────────────
+    await db.execute(sql`ALTER TABLE bk_accounts
+      ADD COLUMN IF NOT EXISTS activity text NOT NULL DEFAULT 'Real Estate'`);
+    push("22. bk_accounts.activity added");
 
     return NextResponse.json({ status: "ok", steps: log.length, log });
   } catch (e: unknown) {

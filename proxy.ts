@@ -44,7 +44,9 @@ function isPublicMachineEndpoint(pathname: string) {
 
 function isPublicPage(pathname: string) {
   return (
-    pathname === "/login" || pathname.startsWith("/login/")
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/api/auth/login"
   );
 }
 

@@ -67,7 +67,7 @@ export default async function DocumentsPage({
           <input type="hidden" name="entityId" value={entityId} />
           <label className="block text-sm sm:col-span-2 lg:col-span-1">
             <span className="text-muted-foreground">File</span>
-            <input type="file" name="file" required className="mt-1 block w-full text-sm" />
+            <input type="file" name="file" required className="mt-1 block w-full text-sm file:mr-3 file:rounded-md file:border file:border-hair file:bg-card file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground file:cursor-pointer hover:file:bg-muted" />
           </label>
           <label className="block text-sm">
             <span className="text-muted-foreground">Type</span>

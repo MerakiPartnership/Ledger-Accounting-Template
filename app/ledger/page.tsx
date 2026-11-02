@@ -177,6 +177,7 @@ export default async function LedgerHome() {
               importedThrough: e.importedThrough,
               propertyAddress: e.propertyAddress,
             }))}
+            canDelete={creator}
           />
         )}
 
